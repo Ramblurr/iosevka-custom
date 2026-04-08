@@ -2,7 +2,9 @@
 
 import fs from "node:fs/promises";
 import { accessSync, constants as fsConstants } from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -43,9 +45,6 @@ function resolveFontPath() {
 const fontPath = resolveFontPath();
 
 const { ssStrings } = await import(pathToFileURL(upstreamTemplatePath).href);
-const fontData = await fs.readFile(fontPath);
-const fontBase64 = fontData.toString("base64");
-
 const lines = ssStrings.map(row => row.join("    "));
 
 const themes = {
@@ -70,7 +69,7 @@ function escapeXml(text) {
     .replaceAll("'", "&apos;");
 }
 
-function renderSvg(themeName, theme) {
+function renderSvg(theme) {
   const tspans = lines
     .map((line, index) => {
       const y = 54 + index * 34;
@@ -82,13 +81,8 @@ function renderSvg(themeName, theme) {
 <svg width="1200" height="200" viewBox="0 0 1200 200" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <style>
-      @font-face {
-        font-family: "Ramsevka Preview";
-        src: url("data:font/ttf;base64,${fontBase64}") format("truetype");
-      }
-
       .sample {
-        font-family: "Ramsevka Preview";
+        font-family: "Ramsevka Mono Preview";
         font-size: 24px;
         font-feature-settings: "calt" 1;
         fill: ${theme.foreground};
@@ -104,11 +98,48 @@ ${tspans}
 `;
 }
 
+async function convertTextToPaths(inputPath, outputPath, tempDir) {
+  const fontsConfPath = path.join(tempDir, "fonts.conf");
+  await fs.writeFile(
+    fontsConfPath,
+    `<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <dir>${escapeXml(path.dirname(fontPath))}</dir>
+  <cachedir>${escapeXml(path.join(tempDir, "fontconfig-cache"))}</cachedir>
+  <config></config>
+</fontconfig>
+`,
+  );
+
+  execFileSync("inkscape", [
+    inputPath,
+    `--export-plain-svg=${outputPath}`,
+    "--actions=select-all:all;object-to-path;export-do",
+  ], {
+    stdio: ["ignore", "ignore", "ignore"],
+    env: {
+      ...process.env,
+      FONTCONFIG_FILE: fontsConfPath,
+      FONTCONFIG_PATH: tempDir,
+    },
+  });
+
+  let output = await fs.readFile(outputPath, "utf8");
+  output = output.replace(/<defs[\s\S]*?<\/defs>\s*/m, "");
+  await fs.writeFile(outputPath, output);
+}
+
 await fs.mkdir(path.join(repoRoot, ".github/assets"), { recursive: true });
 console.log(`using font ${fontPath}`);
 
 for (const [themeName, theme] of Object.entries(themes)) {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), `ramsevka-preview-${themeName}-`));
+  const tempSvgPath = path.join(tempDir, `mono_preview.${themeName}.embedded.svg`);
   const outputPath = path.join(repoRoot, ".github/assets", `mono_preview.${themeName}.svg`);
-  await fs.writeFile(outputPath, renderSvg(themeName, theme));
+
+  await fs.writeFile(tempSvgPath, renderSvg(theme));
+  await convertTextToPaths(tempSvgPath, outputPath, tempDir);
+  await fs.rm(tempDir, { recursive: true, force: true });
   console.log(`wrote ${outputPath}`);
 }

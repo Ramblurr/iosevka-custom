@@ -36,6 +36,7 @@
     else throw "Unsupported features: ${toString features}";
 
   buildPlan = self + /plans/${plan}.toml;
+  ttfDir = if (features == "ttf-unhinted") then "TTF-Unhinted" else "TTF";
 in
   buildNpmPackage {
     inherit pname version;
@@ -73,7 +74,7 @@ in
     postBuild = optionalString nerdfont ''
       fontdir="${placeholder "out"}/share/fonts/truetype/NerdFonts"
       mkdir -p "$fontdir"
-      for ttf_file in dist/${pname}/TTF/*.ttf; do
+      for ttf_file in dist/${pname}/${ttfDir}/*.ttf; do
           ${lib.getExe nerd-font-patcher} "$ttf_file" --complete --no-progressbars \
                 --outputdir "$fontdir"/NerdFonts/${pname}
       done
@@ -84,7 +85,7 @@ in
 
       fontdir="${placeholder "out"}/share/fonts/truetype"
       mkdir -p "$fontdir"
-      install -Dm644 "dist/$pname/TTF"/* "$fontdir"
+      install -Dm644 "dist/$pname/${ttfDir}"/* "$fontdir"
 
       runHook postInstall
     '';

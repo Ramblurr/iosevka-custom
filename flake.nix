@@ -68,7 +68,7 @@
       };
       preview-build = pkgs.writeShellApplication {
         name = "preview-build";
-        runtimeInputs = [pkgs.nodejs];
+        runtimeInputs = [pkgs.nodejs pkgs.inkscape];
         text = ''
           nix build .#ramsevka-mono-preview -o result "$@"
           export RAMSEVKA_MONO_TTF="$PWD/result/share/fonts/truetype/RamsevkaMonoPreview-Regular.ttf"
@@ -77,7 +77,7 @@
       };
       gen-previews = pkgs.writeShellApplication {
         name = "gen-previews";
-        runtimeInputs = [pkgs.nodejs];
+        runtimeInputs = [pkgs.nodejs pkgs.inkscape];
         text = ''
           exec node ./scripts/gen-previews.mjs "$@"
         '';
