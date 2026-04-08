@@ -45,7 +45,38 @@ function resolveFontPath() {
 const fontPath = resolveFontPath();
 
 const { ssStrings } = await import(pathToFileURL(upstreamTemplatePath).href);
-const lines = ssStrings.map(row => row.join("    "));
+
+const previewSpecs = [
+  {
+    name: "mono_preview",
+    width: 1200,
+    height: 200,
+    fontSize: 24,
+    startX: 38,
+    startY: 54,
+    lineHeight: 34,
+    lines: ssStrings.map(row => row.join("    ")),
+  },
+  {
+    name: "mono_glyph_grid",
+    width: 856,
+    height: 436,
+    fontSize: 28,
+    startX: 16,
+    startY: 38,
+    lineHeight: 56,
+    cellWidth: 52,
+    rows: [
+      ["*", "!", '"', "#", "$", "%", "&", "'", "(", ")", "*", "+", ",", "-", ".", "/"],
+      ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=", ">", "?"],
+      ["@", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O"],
+      ["P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[", "\\", "]", "^", "_"],
+      ["`", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o"],
+      ["p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "{", "|", "}", "~", "🯅"],
+      ["←", "↑", "→", "↓", "■", "□", "▲", "△", "◇", "◈", "≤", "≥", "λ", "β", "€", "Σ"],
+    ],
+  },
+];
 
 const themes = {
   light: {
@@ -69,30 +100,43 @@ function escapeXml(text) {
     .replaceAll("'", "&apos;");
 }
 
-function renderSvg(theme) {
-  const tspans = lines
-    .map((line, index) => {
-      const y = 54 + index * 34;
-      return `    <tspan x="38" y="${y}">${escapeXml(line)}</tspan>`;
-    })
-    .join("\n");
+function renderSvg(previewSpec, theme) {
+  const textContent = previewSpec.rows
+    ? previewSpec.rows
+        .map((row, rowIndex) => {
+          const y = previewSpec.startY + rowIndex * previewSpec.lineHeight;
+          const tspans = row
+            .map((cell, colIndex) => {
+              const x = previewSpec.startX + colIndex * previewSpec.cellWidth;
+              return `    <tspan x="${x}" y="${y}">${escapeXml(cell)}</tspan>`;
+            })
+            .join("\n");
+          return tspans;
+        })
+        .join("\n")
+    : previewSpec.lines
+        .map((line, index) => {
+          const y = previewSpec.startY + index * previewSpec.lineHeight;
+          return `    <tspan x="${previewSpec.startX}" y="${y}">${escapeXml(line)}</tspan>`;
+        })
+        .join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="1200" height="200" viewBox="0 0 1200 200" xmlns="http://www.w3.org/2000/svg">
+<svg width="${previewSpec.width}" height="${previewSpec.height}" viewBox="0 0 ${previewSpec.width} ${previewSpec.height}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <style>
       .sample {
         font-family: "Ramsevka Mono Preview";
-        font-size: 24px;
+        font-size: ${previewSpec.fontSize}px;
         font-feature-settings: "calt" 1;
         fill: ${theme.foreground};
       }
     </style>
   </defs>
 
-  <rect x="0.5" y="0.5" width="1199" height="199" rx="12" fill="${theme.background}" stroke="${theme.border}" />
+  <rect x="0.5" y="0.5" width="${previewSpec.width - 1}" height="${previewSpec.height - 1}" rx="12" fill="${theme.background}" stroke="${theme.border}" />
   <text class="sample" xml:space="preserve">
-${tspans}
+${textContent}
   </text>
 </svg>
 `;
@@ -133,13 +177,25 @@ async function convertTextToPaths(inputPath, outputPath, tempDir) {
 await fs.mkdir(path.join(repoRoot, ".github/assets"), { recursive: true });
 console.log(`using font ${fontPath}`);
 
-for (const [themeName, theme] of Object.entries(themes)) {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), `ramsevka-preview-${themeName}-`));
-  const tempSvgPath = path.join(tempDir, `mono_preview.${themeName}.embedded.svg`);
-  const outputPath = path.join(repoRoot, ".github/assets", `mono_preview.${themeName}.svg`);
+for (const previewSpec of previewSpecs) {
+  for (const [themeName, theme] of Object.entries(themes)) {
+    const tempDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), `ramsevka-${previewSpec.name}-${themeName}-`),
+    );
+    const tempSvgPath = path.join(tempDir, `${previewSpec.name}.${themeName}.embedded.svg`);
+    const outputPath = path.join(
+      repoRoot,
+      ".github/assets",
+      `${previewSpec.name}.${themeName}.svg`,
+    );
 
-  await fs.writeFile(tempSvgPath, renderSvg(theme));
-  await convertTextToPaths(tempSvgPath, outputPath, tempDir);
-  await fs.rm(tempDir, { recursive: true, force: true });
-  console.log(`wrote ${outputPath}`);
+    await fs.writeFile(tempSvgPath, renderSvg(previewSpec, theme));
+    await convertTextToPaths(tempSvgPath, outputPath, tempDir);
+    await fs.rm(
+      path.join(repoRoot, ".github/assets", `${previewSpec.name}.svg`),
+      { force: true },
+    );
+    await fs.rm(tempDir, { recursive: true, force: true });
+    console.log(`wrote ${outputPath}`);
+  }
 }

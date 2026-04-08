@@ -8,8 +8,19 @@ exportGlyphNames = true
   [buildPlans.RamsevkaTerm.variants]
   inherits = "ss15"
 
+  [buildPlans.RamsevkaTerm.ligations]
+  inherits = "dlig"
+
     [buildPlans.RamsevkaTerm.variants.design]
-    zero = "oval-broken-slash"
+    one = "base-flat-top-serif"
+    two = "straight-neck-serifed"
+    three = "flat-top-serifed"
+    four = "open-serifed"
+    five = "upright-flat-serifed"
+    six = "straight-bar"
+    seven = "straight-serifed-crossbar"
+    eight = "crossing"
+    zero = "tall-slashed-cutout"
 
 
 [buildPlans.RamsevkaTerm.weights.Regular]
@@ -32,7 +43,3 @@ shape = 700
 menu = 700
 css = 700
 
-[buildPlans.RamsevkaTerm.widths.Normal]
-shape = 600
-menu = 5
-css = "normal"
