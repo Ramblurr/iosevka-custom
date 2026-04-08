@@ -2,6 +2,10 @@
 
 Ramsevka is my custom [Iosevka] build, packaged with Nix.
 
+<img src=".github/assets/hero_clojure.light.svg#gh-light-mode-only" alt="Ramsevka Clojure hero sample" />
+
+<img src=".github/assets/hero_clojure.dark.svg#gh-dark-mode-only" alt="Ramsevka Clojure hero sample" />
+
 <img src=".github/assets/mono_glyph_grid.light.svg#gh-light-mode-only" alt="Ramsevka Mono glyph grid" />
 
 <img src=".github/assets/mono_glyph_grid.dark.svg#gh-dark-mode-only" alt="Ramsevka Mono glyph grid" />

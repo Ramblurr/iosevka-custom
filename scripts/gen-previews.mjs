@@ -46,6 +46,22 @@ const fontPath = resolveFontPath();
 
 const { ssStrings } = await import(pathToFileURL(upstreamTemplatePath).href);
 
+const glyphGridRows = [
+      ["*", "!", '"', "#", "$", "%", "&", "'", "(", ")", "*", "+", ",", "-", ".", "/"],
+      ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=", ">", "?"],
+      ["@", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O"],
+      ["P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[", "\\", "]", "^", "_"],
+      ["`", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o"],
+      ["p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "{", "|", "}", "~", "🯅"],
+      ["←", "↑", "→", "↓", "■", "□", "▲", "△", "◇", "◈", "≤", "≥", "λ", "β", "€", "Σ"],
+    ];
+const glyphGridExtraLines = [
+      "->  ->>  -<>  -<>>  -<><  -<><:  -<<  -<<:  -<  -<:  ;;",
+      "#{  #(  #_  #_(  #?  #:  .-  ~@  && ||  /\\  \\/  -|"
+    ];
+
+
+
 const previewSpecs = [
   {
     name: "mono_preview",
@@ -60,20 +76,102 @@ const previewSpecs = [
   {
     name: "mono_glyph_grid",
     width: 856,
-    height: 436,
+    height: (glyphGridExtraLines.length + glyphGridRows.length) * 56,
     fontSize: 28,
     startX: 16,
     startY: 38,
     lineHeight: 56,
     cellWidth: 52,
-    rows: [
-      ["*", "!", '"', "#", "$", "%", "&", "'", "(", ")", "*", "+", ",", "-", ".", "/"],
-      ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=", ">", "?"],
-      ["@", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O"],
-      ["P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[", "\\", "]", "^", "_"],
-      ["`", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o"],
-      ["p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "{", "|", "}", "~", "🯅"],
-      ["←", "↑", "→", "↓", "■", "□", "▲", "△", "◇", "◈", "≤", "≥", "λ", "β", "€", "Σ"],
+    rows: glyphGridRows,
+    extraLines: glyphGridExtraLines,
+    themeOverrides: {
+      light: {
+        background: "#f9f5d7",
+        foreground: "#3c3836",
+        border: "#d79921",
+      },
+      dark: {
+        background: "#1d2021",
+        foreground: "#ebdbb2",
+        border: "#d79921",
+      },
+    },
+  },
+  {
+    name: "hero_clojure",
+    width: 1280,
+    height: 640,
+    fontSize: 34,
+    startX: 92,
+    startY: 118,
+    lineHeight: 54,
+    lineClass: "hero-sample",
+    featureSettings: '"calt" 1, "dlig" 1',
+    title: {
+      text: "Ramsevka",
+      x: 1232,
+      y: 52,
+      className: "hero-title",
+      anchor: "end",
+    },
+    themeOverrides: {
+      light: {
+        background: "#f9f5d7",
+        foreground: "#3c3836",
+        border: "#d79921",
+        title: "#b57614",
+        definition: "#076678",
+        constant: "#79740e",
+        comment: "#b57614",
+        disabled: "#928374",
+      },
+      dark: {
+        background: "#1d2021",
+        foreground: "#ebdbb2",
+        border: "#d79921",
+        title: "#fabd2f",
+        definition: "#83a598",
+        constant: "#b8bb26",
+        comment: "#fabd2f",
+        disabled: "#928374",
+      },
+    },
+    segmentedLines: [
+      [
+        { text: "(defmacro " },
+        { text: "defkey", className: "hero-definition" },
+        { text: " [key & body]" },
+      ],
+      [
+        { text: "  `(def ~(.-name key) ~@body))" },
+      ],
+      [],
+      [
+        { text: "(defkey " },
+        { text: "::args", className: "hero-definition" },
+        { text: "" },
+      ],
+      [
+        { text: "  (->> (range)" },
+      ],
+      [
+        { text: "       #_(filterv even?)", className: "hero-disabled" },
+        { text: " " },
+        { text: ";;FIXME", className: "hero-comment" },
+      ],
+      [
+        { text: "       (take-while #(<= % " },
+        { text: "0xFF", className: "hero-constant" },
+        { text: "))" },
+      ],
+      [
+        { text: "       (remove #{" },
+        { text: "0 1 2 3 4 5", className: "hero-constant" },
+        { text: "})" },
+      ],
+      [
+        { text: "       (into [])))" },
+      ],
     ],
   },
 ];
@@ -100,8 +198,41 @@ function escapeXml(text) {
     .replaceAll("'", "&apos;");
 }
 
-function renderSvg(previewSpec, theme) {
-  const textContent = previewSpec.rows
+function renderSvg(previewSpec, theme, themeName) {
+  const themeOverride = previewSpec.themeOverrides?.[themeName] ?? {};
+  const effectiveTheme = {
+    background: themeOverride.background ?? previewSpec.background ?? theme.background,
+    foreground: themeOverride.foreground ?? previewSpec.textColor ?? theme.foreground,
+    border: themeOverride.border ?? previewSpec.border ?? theme.border,
+    title: themeOverride.title ?? themeOverride.foreground ?? previewSpec.textColor ?? theme.foreground,
+    definition: themeOverride.definition ?? themeOverride.foreground ?? previewSpec.textColor ?? theme.foreground,
+    constant: themeOverride.constant ?? themeOverride.foreground ?? previewSpec.textColor ?? theme.foreground,
+    comment: themeOverride.comment ?? themeOverride.foreground ?? previewSpec.textColor ?? theme.foreground,
+    disabled: themeOverride.disabled ?? themeOverride.foreground ?? previewSpec.textColor ?? theme.foreground,
+  };
+  const lineClass = previewSpec.lineClass ?? "sample";
+  const featureSettings = previewSpec.featureSettings ?? '"calt" 1, "dlig" 1';
+  const titleContent = previewSpec.title
+    ? `\n  <text class="${previewSpec.title.className}" x="${previewSpec.title.x}" y="${previewSpec.title.y}" text-anchor="${previewSpec.title.anchor ?? "start"}">${escapeXml(previewSpec.title.text)}</text>`
+    : "";
+
+  const segmentedLineContent = (previewSpec.segmentedLines ?? [])
+    .map((segments, index) => {
+      const y = previewSpec.startY + index * previewSpec.lineHeight;
+      if (segments.length === 0) {
+        return `    <tspan x="${previewSpec.startX}" y="${y}"></tspan>`;
+      }
+      const inner = segments
+        .map(segment => {
+          const classAttr = segment.className ? ` class="${segment.className}"` : "";
+          return `<tspan${classAttr}>${escapeXml(segment.text)}</tspan>`;
+        })
+        .join("");
+      return `    <tspan x="${previewSpec.startX}" y="${y}">${inner}</tspan>`;
+    })
+    .join("\n");
+
+  const rowContent = previewSpec.rows
     ? previewSpec.rows
         .map((row, rowIndex) => {
           const y = previewSpec.startY + rowIndex * previewSpec.lineHeight;
@@ -114,12 +245,18 @@ function renderSvg(previewSpec, theme) {
           return tspans;
         })
         .join("\n")
-    : previewSpec.lines
-        .map((line, index) => {
-          const y = previewSpec.startY + index * previewSpec.lineHeight;
-          return `    <tspan x="${previewSpec.startX}" y="${y}">${escapeXml(line)}</tspan>`;
-        })
-        .join("\n");
+    : "";
+
+  const baseLineCount = previewSpec.rows ? previewSpec.rows.length : 0;
+  const lineSource = previewSpec.rows ? (previewSpec.extraLines ?? []) : (previewSpec.segmentedLines ? [] : previewSpec.lines);
+  const lineContent = lineSource
+    .map((line, index) => {
+      const y = previewSpec.startY + (baseLineCount + index) * previewSpec.lineHeight;
+      return `    <tspan x="${previewSpec.startX}" y="${y}">${escapeXml(line)}</tspan>`;
+    })
+    .join("\n");
+
+  const textContent = [rowContent, segmentedLineContent, lineContent].filter(Boolean).join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg width="${previewSpec.width}" height="${previewSpec.height}" viewBox="0 0 ${previewSpec.width} ${previewSpec.height}" xmlns="http://www.w3.org/2000/svg">
@@ -128,14 +265,37 @@ function renderSvg(previewSpec, theme) {
       .sample {
         font-family: "Ramsevka Mono Preview";
         font-size: ${previewSpec.fontSize}px;
-        font-feature-settings: "calt" 1;
-        fill: ${theme.foreground};
+        font-feature-settings: ${featureSettings};
+        fill: ${effectiveTheme.foreground};
+      }
+      .hero-sample {
+        font-family: "Ramsevka Mono Preview";
+        font-size: ${previewSpec.fontSize}px;
+        font-feature-settings: ${featureSettings};
+        fill: ${effectiveTheme.foreground};
+      }
+      .hero-title {
+        font-family: "Ramsevka Mono Preview";
+        font-size: 28px;
+        fill: ${effectiveTheme.title};
+      }
+      .hero-definition {
+        fill: ${effectiveTheme.definition};
+      }
+      .hero-constant {
+        fill: ${effectiveTheme.constant};
+      }
+      .hero-comment {
+        fill: ${effectiveTheme.comment};
+      }
+      .hero-disabled {
+        fill: ${effectiveTheme.disabled};
       }
     </style>
   </defs>
 
-  <rect x="0.5" y="0.5" width="${previewSpec.width - 1}" height="${previewSpec.height - 1}" rx="12" fill="${theme.background}" stroke="${theme.border}" />
-  <text class="sample" xml:space="preserve">
+  <rect x="1" y="1" width="${previewSpec.width - 2}" height="${previewSpec.height - 2}" fill="${effectiveTheme.background}" stroke="${effectiveTheme.border}" stroke-width="2" />${titleContent}
+  <text class="${lineClass}" xml:space="preserve">
 ${textContent}
   </text>
 </svg>
@@ -189,7 +349,7 @@ for (const previewSpec of previewSpecs) {
       `${previewSpec.name}.${themeName}.svg`,
     );
 
-    await fs.writeFile(tempSvgPath, renderSvg(previewSpec, theme));
+    await fs.writeFile(tempSvgPath, renderSvg(previewSpec, theme, themeName));
     await convertTextToPaths(tempSvgPath, outputPath, tempDir);
     await fs.rm(
       path.join(repoRoot, ".github/assets", `${previewSpec.name}.svg`),
