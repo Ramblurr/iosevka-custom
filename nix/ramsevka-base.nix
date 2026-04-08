@@ -18,6 +18,11 @@
 }: let
   inherit (lib.strings) concatStringsSep match optionalString;
 
+  plansSrc = builtins.path {
+    path = ../plans;
+    name = "ramsevka-plans";
+  };
+
   # Derived package attributes.
   pname = "Ramsevka${variant}";
   src = inputs.iosevka-upstream;
@@ -35,7 +40,7 @@
     then "ttf-unhinted::${pname}"
     else throw "Unsupported features: ${toString features}";
 
-  buildPlan = self + /plans/${plan}.toml;
+  buildPlan = plansSrc + "/${plan}.toml";
   ttfDir = if (features == "ttf-unhinted") then "TTF-Unhinted" else "TTF";
 in
   buildNpmPackage {
