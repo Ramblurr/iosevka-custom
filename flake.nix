@@ -27,6 +27,12 @@
         features = "ttf";
       };
 
+      ramsevka-mono-preview = base.override {
+        variant = "MonoPreview";
+        plan = "mono-preview";
+        features = "ttf-unhinted";
+      };
+
       ramsevka-term = base.override {
         variant = "Term";
         features = "ttf";
@@ -54,15 +60,34 @@
 
     devShells = forEachSystem (system: let
       pkgs = pkgsForEach.${system};
+      build = pkgs.writeShellApplication {
+        name = "build";
+        text = ''
+          exec nix build .#ramsevka-full "$@"
+        '';
+      };
+      preview-build = pkgs.writeShellApplication {
+        name = "preview-build";
+        runtimeInputs = [pkgs.nodejs];
+        text = ''
+          nix build .#ramsevka-mono-preview -o result "$@"
+          export RAMSEVKA_MONO_TTF="$PWD/result/share/fonts/truetype/RamsevkaMonoPreview-Regular.ttf"
+          exec node ./scripts/gen-previews.mjs
+        '';
+      };
+      gen-previews = pkgs.writeShellApplication {
+        name = "gen-previews";
+        runtimeInputs = [pkgs.nodejs];
+        text = ''
+          exec node ./scripts/gen-previews.mjs "$@"
+        '';
+      };
     in {
       default = pkgs.mkShell {
         packages = [
-          # For generating font previews
-          (pkgs.python3.withPackages (python-pkgs:
-            with python-pkgs; [
-              pillow
-              matplotlib
-            ]))
+          build
+          preview-build
+          gen-previews
         ];
       };
     });

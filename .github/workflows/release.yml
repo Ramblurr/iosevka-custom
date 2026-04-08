@@ -1,12 +1,14 @@
-name: "Build Fonts"
+# build happens in garnix: https://app.garnix.io/repo/Ramblurr/iosevka-custom
+name: deploy fonts
 
 on:
+  check_suite:
+    types: [completed]
   workflow_dispatch:
-  push:
-    tags: ["v*", "test*"]
 
 permissions:
   contents: write
+  id-token: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,6 +16,20 @@ concurrency:
 
 jobs:
   build:
+    if: |
+      (
+        github.ref == 'refs/heads/main'
+        && !contains(
+          github.event.head_commit.message
+          || github.event.check_suite.head_commit.message
+          || '',
+          'no-deploy'
+        )
+        && (
+          github.event_name == 'workflow_dispatch'
+          || github.event.check_suite.conclusion == 'success'
+        )
+      )
     strategy:
       matrix:
         include:
@@ -27,16 +43,15 @@ jobs:
             artifact: RamsevkaTerm.zip
     runs-on: ubuntu-latest
     steps:
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@main
+      - uses: actions/checkout@v6
+      - uses: DeterminateSystems/determinate-nix-action@v3
         with:
-          logger: pretty
           extra-conf: |
-            extra-experimental-features = nix-command flakes
+            extra-substituters = https://cache.garnix.io
+            extra-trusted-public-keys = cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g=
 
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: DeterminateSystems/flakehub-cache-action@v3
+      - uses: DeterminateSystems/flake-checker-action@v12
       - name: Build
         run: |
           #!/usr/bin/env bash

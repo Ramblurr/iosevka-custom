@@ -6,43 +6,10 @@ noCvSs = false
 exportGlyphNames = true
 
   [buildPlans.RamsevkaMono.variants]
-  inherits = "ss05"
+  inherits = "ss15"
 
     [buildPlans.RamsevkaMono.variants.design]
-    one = "no-base"
-    zero = "slashed"
-    capital-a = "straight-serifless"
-    capital-i = "short-serifed"
-    capital-x = "straight-serifless"
-    a = "double-storey-serifless"
-    c = "serifless"
-    f = "serifless"
-    g = "single-storey-serifless"
-    j = "flat-hook-serifed"
-    l = "serifed"
-    w = "straight-serifless"
-    lower-lambda = "straight"
-    lower-pi = "tailed"
-    tittle = "square"
-    tilde = "low"
-    asterisk = "turn-hex-low"
-    underscore = "low"
-    caret = "low"
-    ascii-single-quote = "straight"
-    paren = "flat-arc"
-    brace = "straight"
-    guillemet = "curly"
-    number-sign = "upright"
-    at = "fourfold"
-    dollar = "through"
-    bar = "force-upright"
-    question = "smooth"
-    lig-plus-chain = "without-notch"
-    lig-double-arrow-bar = "without-notch"
-    lig-single-arrow-bar = "without-notch"
-
-  [buildPlans.RamsevkaMono.ligations]
-  inherits = "fstar"
+    zero = "oval-broken-slash"
 
 [buildPlans.RamsevkaMono.weights.Regular]
 shape = 400

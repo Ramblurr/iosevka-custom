@@ -11,6 +11,7 @@
   writableTmpDirAsHomeHook,
   # Options
   variant ? null, # "Mono" or "Term"
+  plan ? lib.toLower variant,
   features ? "ttf", # "full", "ttf" or "ttf-unhinted"
   nerdfont ? false,
   ...
@@ -34,7 +35,7 @@
     then "ttf-unhinted::${pname}"
     else throw "Unsupported features: ${toString features}";
 
-  buildPlan = self + /plans/${lib.toLower variant}.toml;
+  buildPlan = self + /plans/${plan}.toml;
 in
   buildNpmPackage {
     inherit pname version;

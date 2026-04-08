@@ -2,9 +2,10 @@
 
 Ramsevka is my custom [Iosevka] build, packaged with Nix.
 
-| Preview                              |
-| ------------------------------------ |
-| ![](.github/assets/mono_preview.png) |
+| Preview |
+| ------- |
+| <img src=".github/assets/mono_preview.light.svg#gh-light-mode-only" alt="Ramsevka Mono preview" />
+<img src=".github/assets/mono_preview.dark.svg#gh-dark-mode-only" alt="Ramsevka Mono preview" /> |
 
 ## Building
 
@@ -22,7 +23,13 @@ addition to what is available.
 
 ```bash
 # Build directly from a checkout
-$ nix build .#ramsevka-mono -Lv
+$ nix build .#ramsevka-mono -Lv -o result
+
+# Fast preview loop: build the preview package and regenerate preview SVGs
+$ nix develop -c preview-build
+
+# Regenerate README preview SVGs from the built font in ./result
+$ nix develop -c gen-previews
 ```
 
 ## Installing
