@@ -78,12 +78,18 @@ Additionally, the [Iosevka customizer](https://typeof.net/Iosevka/customizer)
 and the [build guide] from the upstream Iosevka repository have been valuable
 references.
 
-## License: MIT License
+## License
+
+Build tooling:
 
 - Copyright © 2025 NotAShelf
 - Copyright © 2026 Casey Link <unnamedrambler@gmail.com>
 
 Distributed under the [MIT](https://spdx.org/licenses/MIT.html) license.
+
+Resulting font outputs:
+
+Licensed under the [SIL Open Font License 1.1][OFL-1.1] [just like Iosevka](https://github.com/be5invis/Iosevka/blob/main/LICENSE.md)
 
 [Iosevka]: https://typeof.net/Iosevka
 [Ioshelfka]: https://github.com/NotAShelf/Ioshelfka
@@ -91,3 +97,4 @@ Distributed under the [MIT](https://spdx.org/licenses/MIT.html) license.
 [custom Iosevka build]: https://github.com/viperML/iosevka/
 [build guide]: https://github.com/be5invis/Iosevka/blob/main/doc/custom-build.md
 [@NotAShelf]: https://github.com/NotAShelf
+[OFL-1.1]: https://spdx.org/licenses/OFL-1.1.html
