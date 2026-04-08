@@ -1,10 +1,6 @@
 # Ramsevka
 
-[Iosevka]: https://typeof.net/Iosevka
-
-Home-baked [Iosevka] builds with personal twists and a fancy posterior. Based on
-the FiraCode template, with font tweaks from all font variants as I see fit.
-Deterministic and pretty.
+Ramsevka is my custom [Iosevka] build, packaged with Nix.
 
 | Preview                              |
 | ------------------------------------ |
@@ -13,18 +9,16 @@ Deterministic and pretty.
 ## Building
 
 This flake provides **4 packages** corresponding to different versions of the
-same font. The differences are subtle, but noticeable. The main variants of
-Ramsevka are:
+same font. The main variants of Ramsevka are:
 
 - Ramsevka Mono
 - Ramsevka Term
 - Ramsevka Mono Nerdfont
 - Ramsevka Term Nerdfont
 
-You may built any available variant with `nix build`. You may also call
-`./nix/ramsevka-base.nix` yourself if you'd like to apply your own tweaks _in
-addition_ to what is available. Doing so invalidates any binary cache, but that
-probably does not bother you.
+You may build any available variant with `nix build`. You may also call
+`./nix/ramsevka-base.nix` yourself if you'd like to apply your own tweaks in
+addition to what is available.
 
 ```bash
 # Build directly from a checkout
@@ -76,12 +70,24 @@ Foot terminal:
 
 ## Credits
 
+The Nix build scripts and repository structure used here were adapted from
+[Ioshelfka] by [@NotAShelf]. Which was in turn inspired by [@viperML]'s [custom
+Iosevka build].
+
+Additionally, the [Iosevka customizer](https://typeof.net/Iosevka/customizer)
+and the [build guide] from the upstream Iosevka repository have been valuable
+references.
+
+## License: MIT License
+
+- Copyright © 2025 NotAShelf
+- Copyright © 2026 Casey Link <unnamedrambler@gmail.com>
+
+Distributed under the [MIT](https://spdx.org/licenses/MIT.html) license.
+
+[Iosevka]: https://typeof.net/Iosevka
+[Ioshelfka]: https://github.com/NotAShelf/Ioshelfka
 [@viperML]: https://github.com/viperML
 [custom Iosevka build]: https://github.com/viperML/iosevka/
 [build guide]: https://github.com/be5invis/Iosevka/blob/main/doc/custom-build.md
-
-The build process is partially inspired by [@viperML]'s [custom Iosevka build].
-
-Additionally, the [Iosevka customizer](https://typeof.net/Iosevka/customizer)
-and the [build guide] found in the Iosevka repository have been very valuable
-resources. Thank you!
+[@NotAShelf]: https://github.com/NotAShelf

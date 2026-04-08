@@ -17,14 +17,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - package: ioshelfka-mono-nerd
-            artifact: IoshelfkaMonoNerd.zip
-          - package: ioshelfka-term-nerd
-            artifact: IoshelfkaTermNerd.zip
-          - package: ioshelfka-mono
-            artifact: IoshelfkaMono.zip
-          - package: ioshelfka-term
-            artifact: IoshelfkaTerm.zip
+          - package: ramsevka-mono-nerd
+            artifact: RamsevkaMonoNerd.zip
+          - package: ramsevka-term-nerd
+            artifact: RamsevkaTermNerd.zip
+          - package: ramsevka-mono
+            artifact: RamsevkaMono.zip
+          - package: ramsevka-term
+            artifact: RamsevkaTerm.zip
     runs-on: ubuntu-latest
     steps:
       - name: Install Nix
