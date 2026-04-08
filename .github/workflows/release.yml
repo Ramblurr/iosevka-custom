@@ -1,0 +1,85 @@
+name: "Build Fonts"
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*", "test*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - package: ioshelfka-mono-nerd
+            artifact: IoshelfkaMonoNerd.zip
+          - package: ioshelfka-term-nerd
+            artifact: IoshelfkaTermNerd.zip
+          - package: ioshelfka-mono
+            artifact: IoshelfkaMono.zip
+          - package: ioshelfka-term
+            artifact: IoshelfkaTerm.zip
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+        with:
+          logger: pretty
+          extra-conf: |
+            extra-experimental-features = nix-command flakes
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          #!/usr/bin/env bash
+          set -euxo pipefail
+
+          # Debugging info
+          echo "Building package from Matrix: ${{ matrix.package }}"
+          echo "Expected artifact from Matrix: ${{ matrix.artifact }}"
+
+          # Build the package
+          echo "Building package: ${{ matrix.package }}"
+          nix build .#${{ matrix.package }} --print-build-logs || { echo "Build failed for ${{ matrix.package }}"; exit 1; }
+
+          # Validate build output
+          if [[ ! -d "./result/share/fonts/truetype" ]]; then
+            echo "Error: Expected directory './result/share/fonts/truetype' not found in the build output"
+            ls -R ./result || echo "No build results found in './result'"
+            exit 1
+          fi
+
+          # Debugging: List fonts and patched fonts
+          echo "Listing contents of build output:"
+          ls -l ./result/share/fonts/truetype
+
+          # Create a zip file with the build artifacts
+          echo "Creating artifact zip: ${{ matrix.artifact }}"
+          zip -vr9 ${{ matrix.artifact }} ./result/share/fonts/truetype || { echo "Failed to create zip artifact"; exit 1; }
+
+          # Validate artifact creation
+          if [[ ! -f "${{ matrix.artifact }}" ]]; then
+            echo "Error: Artifact ${{ matrix.artifact }} was not created"
+            ls -l || echo "No files found in the current directory"
+            exit 1
+          fi
+
+          # Confirm success
+          echo "Build and artifact creation succeeded for ${{ matrix.package }}"
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./${{ matrix.artifact }}
+          asset_name: ${{ matrix.artifact }}
+          tag: ${{ github.ref }}
+          overwrite: true
