@@ -9,89 +9,112 @@
     };
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    ...
-  } @ inputs: let
-    systems = ["x86_64-linux" "aarch64-linux"];
-    forEachSystem = nixpkgs.lib.genAttrs systems;
-    pkgsForEach = nixpkgs.legacyPackages;
-  in {
-    packages = forEachSystem (system: let
-      pkgs = pkgsForEach.${system};
-      base = pkgs.callPackage ./nix/ramsevka-base.nix {inherit inputs self;};
-    in {
-      ramsevka-mono = base.override {
-        variant = "Mono";
-        features = "ttf";
-      };
-
-      ramsevka-mono-preview = base.override {
-        variant = "MonoPreview";
-        plan = "mono-preview";
-        features = "ttf-unhinted";
-      };
-
-      ramsevka-term = base.override {
-        variant = "Term";
-        features = "ttf";
-      };
-
-      ramsevka-mono-nerd = base.override {
-        variant = "Mono";
-        features = "ttf";
-        nerdfont = true;
-      };
-
-      ramsevka-term-nerd = base.override {
-        variant = "Term";
-        features = "ttf";
-        nerdfont = true;
-      };
-
-      ramsevka-full = pkgs.linkFarmFromDrvs "ramsevka-full" [
-        self.packages.${system}.ramsevka-mono
-        self.packages.${system}.ramsevka-term
-        self.packages.${system}.ramsevka-mono-nerd
-        self.packages.${system}.ramsevka-term-nerd
+  outputs =
+    {
+      self,
+      nixpkgs,
+      ...
+    }@inputs:
+    let
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
       ];
-    });
+      forEachSystem = nixpkgs.lib.genAttrs systems;
+      pkgsForEach = nixpkgs.legacyPackages;
+    in
+    {
+      packages = forEachSystem (
+        system:
+        let
+          pkgs = pkgsForEach.${system};
+          base = pkgs.callPackage ./nix/ramsevka-base.nix { inherit inputs self; };
+        in
+        {
+          # esport these, not customized, just to have them built/cached to speed up my main flake's build
+          iosevka-etoile = pkgs.iosevka-bin.override { variant = "Etoile"; };
+          iosevka-aile = pkgs.iosevka-bin.override { variant = "Aile"; };
+          ramsevka-mono = base.override {
+            variant = "Mono";
+            features = "ttf";
+          };
 
-    devShells = forEachSystem (system: let
-      pkgs = pkgsForEach.${system};
-      build = pkgs.writeShellApplication {
-        name = "build";
-        text = ''
-          exec nix build .#ramsevka-full "$@"
-        '';
-      };
-      preview-build = pkgs.writeShellApplication {
-        name = "preview-build";
-        runtimeInputs = [pkgs.nodejs pkgs.inkscape];
-        text = ''
-          nix build .#ramsevka-mono-preview -o result "$@"
-          export RAMSEVKA_MONO_TTF="$PWD/result/share/fonts/truetype/RamsevkaMonoPreview-Regular.ttf"
-          exec node ./scripts/gen-previews.mjs
-        '';
-      };
-      gen-previews = pkgs.writeShellApplication {
-        name = "gen-previews";
-        runtimeInputs = [pkgs.nodejs pkgs.inkscape];
-        text = ''
-          exec node ./scripts/gen-previews.mjs "$@"
-        '';
-      };
-    in {
-      default = pkgs.mkShell {
-        packages = [
-          build
-          preview-build
-          gen-previews
-        ];
-      };
-    });
+          ramsevka-mono-preview = base.override {
+            variant = "MonoPreview";
+            plan = "mono-preview";
+            features = "ttf-unhinted";
+          };
 
-    hydraJobs = self.packages;
-  };
+          ramsevka-term = base.override {
+            variant = "Term";
+            features = "ttf";
+          };
+
+          ramsevka-mono-nerd = base.override {
+            variant = "Mono";
+            features = "ttf";
+            nerdfont = true;
+          };
+
+          ramsevka-term-nerd = base.override {
+            variant = "Term";
+            features = "ttf";
+            nerdfont = true;
+          };
+
+          ramsevka-full = pkgs.linkFarmFromDrvs "ramsevka-full" [
+            self.packages.${system}.ramsevka-mono
+            self.packages.${system}.ramsevka-term
+            self.packages.${system}.ramsevka-mono-nerd
+            self.packages.${system}.ramsevka-term-nerd
+          ];
+        }
+      );
+
+      devShells = forEachSystem (
+        system:
+        let
+          pkgs = pkgsForEach.${system};
+          build = pkgs.writeShellApplication {
+            name = "build";
+            text = ''
+              exec nix build .#ramsevka-full "$@"
+            '';
+          };
+          preview-build = pkgs.writeShellApplication {
+            name = "preview-build";
+            runtimeInputs = [
+              pkgs.nodejs
+              pkgs.inkscape
+            ];
+            text = ''
+              nix build .#ramsevka-mono-preview -o result "$@"
+              export RAMSEVKA_MONO_TTF="$PWD/result/share/fonts/truetype/RamsevkaMonoPreview-Regular.ttf"
+              exec node ./scripts/gen-previews.mjs
+            '';
+          };
+          gen-previews = pkgs.writeShellApplication {
+            name = "gen-previews";
+            runtimeInputs = [
+              pkgs.nodejs
+              pkgs.inkscape
+            ];
+            text = ''
+              exec node ./scripts/gen-previews.mjs "$@"
+            '';
+          };
+        in
+        {
+          default = pkgs.mkShell {
+            packages = [
+              build
+              preview-build
+              gen-previews
+            ];
+          };
+        }
+      );
+
+      hydraJobs = self.packages;
+    };
 }
