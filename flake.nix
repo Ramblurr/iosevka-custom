@@ -2,7 +2,7 @@
   description = "Ramsevka custom Iosevka build plans";
 
   inputs = {
-    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1"; # tracks nixpkgs unstable branch
+    nixpkgs.url = "github:ramblurr/nixpkgs/channel/personal-unstable";
     iosevka-upstream = {
       url = "github:be5invis/Iosevka?ref=refs/tags/v34.3.0";
       flake = false;
